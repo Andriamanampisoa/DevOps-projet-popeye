@@ -1,0 +1,81 @@
+version: '3'
+
+services:
+
+
+  redis:
+    image: "redis:latest"
+    ports:
+      - 6379:6379
+    restart: on-failure
+    networks:
+      - poll-tier
+      - back-tier
+
+
+  db:
+    image: "postgres:9.4"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    networks:
+      - result-tier
+      - back-tier
+
+
+  poll:
+    build: ./poll
+    ports:
+      - 5000:80
+    depends_on:
+      - redis
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    networks:
+      - poll-tier
+
+
+  worker:
+    build: ./worker
+    restart: on-failure
+    depends_on:
+      - redis
+      - db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    networks:
+      - back-tier
+  
+
+  result:
+    build: ./result
+    ports:
+      - 5001:80
+    depends_on:
+      - db
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    networks:
+      - result-tier
+
+
+volumes:
+  db-data:
+
+networks:
+  poll-tier:
+  result-tier:
+  back-tier:
