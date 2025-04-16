@@ -17,7 +17,7 @@ The application is composed of 5 elements:
 - Result, a Node.js web application that fetches the votes from the database and displays the result.
 
 ### The deployment
-I had to create 3 images : Poll, Result and Worker.
+I had to create 3 images : Poll, Result and Worker.\
 Finally, I had to create a Docker Compose file which contains 5 services : Poll, Redis, Worker, Db and Result.
 
 
